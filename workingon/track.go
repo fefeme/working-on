@@ -80,54 +80,36 @@ func NewTimeEntry(cfg *Config, project string, wid int, summaryOrKey string, tem
 }
 
 func setDuration(cfg *Config,
-	timeEntry *toggl.TimeEntry, startTime time.Time, stopTime time.Time, duration time.Duration, appendTo bool, running bool) error {
+	timeEntry *toggl.TimeEntry, startTime time.Time, stopTime time.Time, duration time.Duration,running bool) error {
 
 	now := time.Now()
 
-	if appendTo {
-		c := toggl.NewToggl(cfg.Settings.ToggleApiToken)
-		t, err := c.TimeEntries.MostRecent()
-		if err != nil {
-			return err
-		}
-		timeEntry.Start = t.Stop
-		if running {
-			timeEntry.Duration = t.Start.Unix() * -1
-		} else {
-			if duration == 0 {
-				timeEntry.Stop = &now
-			} else {
-				timeEntry.Duration = int64(duration.Seconds())
-			}
-		}
-	} else {
-		if !running {
-			if timeEntry.Start == nil || timeEntry.Start.IsZero() {
-				if startTime.IsZero() {
-					return errors.New("no start time given")
-				}
-				timeEntry.Start = &startTime
-			}
-			if timeEntry.Stop == nil || timeEntry.Stop.IsZero() {
-				if duration == 0 {
-					if stopTime.IsZero() {
-						return errors.New("no stop time or duration given")
-					}
-					timeEntry.Stop = &stopTime
-				}
-				timeEntry.Duration = int64(duration.Seconds())
-			}
-
-		} else {
+	if !running {
+		if timeEntry.Start == nil || timeEntry.Start.IsZero() {
 			if startTime.IsZero() {
-				timeEntry.Start = &now
-				timeEntry.Duration = now.Unix() * -1
-			} else {
-				timeEntry.Start = &startTime
-				timeEntry.Duration = startTime.Unix() * -1
+				return errors.New("no start time given")
 			}
-
+			timeEntry.Start = &startTime
 		}
+		if timeEntry.Stop == nil || timeEntry.Stop.IsZero() {
+			if duration == 0 {
+				if stopTime.IsZero() {
+					return errors.New("no stop time or duration given")
+				}
+				timeEntry.Stop = &stopTime
+			}
+			timeEntry.Duration = int64(duration.Seconds())
+		}
+
+	} else {
+		if startTime.IsZero() {
+			timeEntry.Start = &now
+			timeEntry.Duration = now.Unix() * -1
+		} else {
+			timeEntry.Start = &startTime
+			timeEntry.Duration = startTime.Unix() * -1
+		}
+
 	}
 
 	err := timeEntry.Validate()
@@ -155,12 +137,7 @@ func AddOrStart(cmd *cobra.Command, cfg *Config,
 		}
 	}
 
-	appendTo, err := cmd.Flags().GetBool("append")
-	if err != nil {
-		return nil, err
-	}
-
-	err = setDuration(cfg, timeEntry, startTime, stopTime, duration, appendTo, running)
+	err = setDuration(cfg, timeEntry, startTime, stopTime, duration, running)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,8 @@ import (
 	"github.com/fefeme/workingon/workingon"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"strings"
+	"time"
 )
 
 func NewStartCommand(cfg *workingon.Config) *cobra.Command {
@@ -13,7 +15,9 @@ func NewStartCommand(cfg *workingon.Config) *cobra.Command {
 		dry      bool
 		cont     bool
 		project  string
-		commandArgs *CommandArgs
+		start    time.Time
+		duration time.Duration
+		tail     []string
 	)
 
 	startCommand := &cobra.Command{
@@ -21,11 +25,13 @@ func NewStartCommand(cfg *workingon.Config) *cobra.Command {
 		Short: "Start working on a task",
 		Long:  `Start working on a task`,
 		Args: func(cmd *cobra.Command, args []string) error {
-			var err error
-			commandArgs, err = parseArgs(cmd, false, args, cfg)
-			if err != nil {
-				return err
+			parseArgsConfig := ParseArgsConfig{
+				defaultDateFormat:     cfg.Settings.DateLayout,
+				defaultDateTimeFormat: cfg.Settings.DateTimeLayout,
+				defaultLocation:       &cfg.Settings.Location,
 			}
+
+			start, duration, tail = ParseArgs(&parseArgsConfig, args)
 			return nil
 		},
 
@@ -46,12 +52,13 @@ func NewStartCommand(cfg *workingon.Config) *cobra.Command {
 				return err
 			}
 
-			timeEntry, err := workingon.AddOrStart(cmd, cfg, wid, project, commandArgs.SummaryOrKey, commandArgs.StartTime,
-				commandArgs.Duration, templateArgs, true)
+
+			timeEntry, err := workingon.AddOrStart(cmd, cfg, wid, project, strings.Join(tail, " "), start,
+				duration, templateArgs, true)
 			if err != nil {
 				return err
 			}
-			fmt.Println(timeEntry.Format(cfg.Settings.DateTimeLayout, &cfg.Settings.Location))
+			fmt.Printf("Started tracking for: %s \n", timeEntry.Format(cfg.Settings.DateTimeLayout, &cfg.Settings.Location))
 
 			return nil
 
@@ -63,7 +70,6 @@ func NewStartCommand(cfg *workingon.Config) *cobra.Command {
 	startCommand.Flags().StringVarP(&project, "project", "p", viper.GetString("TOGGL_PROJECT"), "Set project")
 	startCommand.Flags().StringToStringP("templateArgs", "t", nil, "List of named template args")
 	startCommand.Flags().IntP("wid", "w", cfg.Settings.ToggleWid, "Toggle track workspace id")
-
 
 	return startCommand
 }

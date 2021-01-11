@@ -29,7 +29,7 @@ type TimeEntry struct {
 	Tid         int        `json:"tid,omitempty"`
 	Billable    bool       `json:"billable"`
 	Start       *time.Time `json:"start"`
-	Stop        *time.Time `json:"stop"`
+	Stop        *time.Time `json:"stop,omitempty"`
 	Duration    int64      `json:"duration,omitempty"`
 	CreatedWith string     `json:"created_with"`
 	Tags        []string   `json:"tags,omitempty"`

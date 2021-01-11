@@ -27,10 +27,12 @@ func ParseTimeUTCE(str string, dateLayout string, dateTimeLayout string, loc *ti
 	if isTime.MatchString(str) {
 		dt = time.Now()
 		str = fmt.Sprintf("%s %s", dt.Format(dateLayout), str)
+		//fmt.Printf("Parsing time %v, %v \n", str, dateLayout)
 		dt, err = time.ParseInLocation(dateTimeLayout, str, loc)
 		if err != nil {
 			return time.Time{}, err
 		}
+
 		return dt.UTC(), nil
 	}
 	return time.Time{}, fmt.Errorf("%s is not a time", str)

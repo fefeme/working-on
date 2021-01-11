@@ -49,7 +49,7 @@ func (t *TimeEntry) Format(dfLayout string, loc *time.Location) string {
 
 	d := t.Duration
 	if d < 0 {
-		return fmt.Sprintf("\"%s\" %d at %s", t.Description, t.Pid, start)
+		return fmt.Sprintf("%s (%d) at %s (running)", t.Description, t.Pid, start)
 	}
 
 	return fmt.Sprintf("\"%s\" %s for %s (%d)", t.Description, start,

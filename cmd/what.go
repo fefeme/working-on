@@ -11,6 +11,8 @@ import (
 
 func NewWhatCommand(cfg *workingon.Config) *cobra.Command {
 	var flagToday bool
+	var date string
+	var flagYesterday bool
 
 	whatCommand := &cobra.Command{
 		Use:   "what",
@@ -19,11 +21,28 @@ func NewWhatCommand(cfg *workingon.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cl := toggl.NewToggl(cfg.Settings.ToggleApiToken)
 
-			if flagToday {
-				year, month, day := time.Now().Date()
-				start := time.Date(year, month, day, 0, 0, 0, 0, &cfg.Settings.Location)
-				now := time.Now()
-				timeEntries, err := cl.TimeEntries.List(&start, &now)
+			if flagToday || flagYesterday || date != "" {
+
+				var (
+					start time.Time
+					end   time.Time
+				)
+
+				if flagToday {
+					year, month, day := time.Now().Date()
+					start = time.Date(year, month, day, 0, 0, 0, 0, &cfg.Settings.Location)
+					end = time.Now()
+				} else if flagYesterday {
+					year, month, day := time.Now().AddDate(0,0,-1).Date()
+					start = time.Date(year, month, day, 0, 0, 0, 0, &cfg.Settings.Location)
+					end = time.Now()
+
+				} else {
+					start = ParseDateFromArg(date, cfg)
+					end = time.Date(start.Year(), start.Month(), start.Day(), 23, 59, 59, int(time.Second-time.Nanosecond), time.Now().Location())
+				}
+
+				timeEntries, err := cl.TimeEntries.List(&start, &end)
 				if err != nil {
 					return err
 				}
@@ -37,7 +56,6 @@ func NewWhatCommand(cfg *workingon.Config) *cobra.Command {
 						{Align: simpletable.AlignLeft, Text: "Duration"},
 					},
 				}
-
 
 				for _, te := range timeEntries.TimeEntries {
 					duration := time.Duration(te.Duration) * time.Second
@@ -87,7 +105,9 @@ func NewWhatCommand(cfg *workingon.Config) *cobra.Command {
 		},
 	}
 	whatCommand.Flags().BoolP("prompt", "p", false, "Output an indicator for usage in a shell prompt")
+	whatCommand.Flags().BoolVarP(&flagYesterday, "yesterday", "y", false, "List time entries for yesterday")
 	whatCommand.Flags().BoolVarP(&flagToday, "today", "t", false, "List time entries for today")
+	whatCommand.Flags().StringVarP(&date, "date", "d", "", "List time entries for date")
 
 	return whatCommand
 }
