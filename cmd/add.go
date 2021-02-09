@@ -34,10 +34,11 @@ type TaskDef struct {
 
 func NewAddCommand(cfg *workingon.Config) *cobra.Command {
 	var (
-		duration       time.Duration
-		start          time.Time
-		tail           []string
-		addCommand     = &cobra.Command{
+		duration   time.Duration
+		start      time.Time
+		dryRun     bool
+		tail       []string
+		addCommand = &cobra.Command{
 			Use:   "add <key|summary|template alias> <start time> <duration>",
 			Short: "Add a time entry",
 			Long: `Add a time entry
@@ -93,7 +94,6 @@ or by description/key, start time and duration`,
 					}
 				}
 
-				fmt.Println("Start", start)
 				timeEntry, err := workingon.AddOrStart(cmd, cfg, wid, project, strings.Join(tail, " "), start,
 					duration, templateArgs, false)
 				if err != nil {
@@ -109,7 +109,7 @@ or by description/key, start time and duration`,
 	// Flags
 	addCommand.Flags().StringP("stop", "s", "", "Stop Time")
 	addCommand.Flags().StringP("project", "p", viper.GetString("TOGGL_PROJECT"), "Set project")
-	addCommand.Flags().BoolP("dry", "d", false, "Do not create anything in toggl")
+	addCommand.Flags().BoolVarP(&dryRun, "dry", "d", false, "Do not create anything in toggl")
 	addCommand.Flags().BoolP("append", "a", false, "Append to last time entry")
 	addCommand.Flags().BoolP("fuzzy", "f", false, "Add some fuzziness to the start and stop time")
 	addCommand.Flags().IntP("wid", "w", cfg.Settings.ToggleWid, "Toggle track workspace id")

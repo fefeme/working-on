@@ -108,7 +108,7 @@ func ParseArgs(config *ParseArgsConfig, args []string) (start time.Time, duratio
 		if d != 0 {
 			duration = d
 			if dt != nil {
-				start = time.Date(start.Year(), start.Month(), start.Day(), dt.Hour(), dt.Minute(), 0, 0, config.defaultLocation)
+				start = time.Date(start.Year(), start.Month(), start.Day(), dt.Hour(), dt.Minute(), 0, 0, time.UTC)
 			}
 			valid = true
 			continue
@@ -130,6 +130,5 @@ func ParseArgs(config *ParseArgsConfig, args []string) (start time.Time, duratio
 			//fmt.Printf("Neither a duration or a time %v -> %v \n", arg, tail)
 		}
 	}
-
 	return start, duration, tail
 }

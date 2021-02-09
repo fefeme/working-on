@@ -25,6 +25,7 @@ type Settings struct {
 	ToggleApiToken    string        `mapstructure:"toggl_api_token" yaml:"toggle_api_token"`
 	ToggleWid         int           `mapstructure:"toggl_wid" yaml:"toggl_wid"`
 	TogglePidRequired bool          `mapstructure:"toggl_pid_required" yaml:"toggl_pid_required"`
+	DefaultTaskSource string	    `mapstructure:"default_task_source" yaml:"default_task_source"`
 }
 
 type TemplateConfig struct {

@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ErrorPidRequired = errors.New("no project id found for toggl but TogglPidRequired is set to true")
+	ErrorPidRequired        = errors.New("no project id found for toggl but TogglPidRequired is set to true")
 	ErrorPidNotSetInMapping = errors.New("project pid not set in mapping")
 )
 
@@ -29,6 +29,8 @@ func NewTimeEntry(cfg *Config, project string, wid int, summaryOrKey string, tem
 		// Maybe it's an alias for a template
 		tpl, _ := Configuration.GetTemplate(summaryOrKey)
 		if tpl != nil {
+			// We need to overwrite the startime and stoptime from the commandline
+			// for example: wo add ds 21.01.2021 should work
 			timeEntry, err = tpl.CreateTimeEntryFromTemplate(templateArgs)
 			if err != nil {
 				return nil, err
@@ -40,7 +42,6 @@ func NewTimeEntry(cfg *Config, project string, wid int, summaryOrKey string, tem
 			}
 		}
 	}
-
 
 	if project != "" {
 		// Overwrite Project pid with command line project parameter
@@ -64,7 +65,7 @@ func NewTimeEntry(cfg *Config, project string, wid int, summaryOrKey string, tem
 		}
 	}
 	// If PID is still unknown, let's try to find a pid using a git repository mapping
-	if timeEntry.Pid == 0 && cfg.Settings.TogglePidRequired {
+	if timeEntry.Tid == 0 && timeEntry.Pid == 0 && cfg.Settings.TogglePidRequired {
 		//
 		pid := FindProjectByGitRepositoryUrl(cfg)
 		if pid == 0 {
@@ -80,7 +81,7 @@ func NewTimeEntry(cfg *Config, project string, wid int, summaryOrKey string, tem
 }
 
 func setDuration(cfg *Config,
-	timeEntry *toggl.TimeEntry, startTime time.Time, stopTime time.Time, duration time.Duration,running bool) error {
+	timeEntry *toggl.TimeEntry, startTime time.Time, stopTime time.Time, duration time.Duration, running bool) error {
 
 	now := time.Now()
 
